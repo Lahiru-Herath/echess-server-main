@@ -6,7 +6,7 @@ const TournamentRegistrationSchema = new mongoose.Schema({
         required: true,
     },
     registeredDate: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         required: true,
     },
     paymentAmount: {

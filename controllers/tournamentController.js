@@ -42,3 +42,52 @@ export const getTournaments = async (req, res, next) => {
         next(err);
     }
 }
+
+export const getClassifiedTournaments = async (req, res, next) => {
+    try {
+        const tournaments = await Tournament.find();
+        const classifiedTournaments = {
+            Upcoming: [],
+            Ongoing: [],
+            Completed: [],
+        };
+
+        const organizerId = tournaments[0]?.organizerId;
+        const organizer = await Organizer.findById(organizerId);
+
+        tournaments.forEach((tournament) => {
+            const entryType = tournament.ageDetails?.length > 0 ? "Paid" : "Free";
+            const numPlayers = tournament.playerRegistrations?.length;
+            const tournamentData = {
+                name: tournament.name,
+                club: organizer.clubName,
+                location: tournament.location,
+                entry: entryType,
+                startDate: tournament.startDate,
+                endDate: tournament.endDate,
+                participations: numPlayers,
+                ongoingRound: 3,
+            };
+
+            switch (tournament.tournamentStatus) {
+                case 'UPCOMING':
+                    classifiedTournaments.Upcoming.push(tournamentData);
+                    break;
+                case 'ONGOING':
+                    classifiedTournaments.Ongoing.push(tournamentData);
+                    break;
+                case 'COMPLETED':
+                    classifiedTournaments.Completed.push(tournamentData);
+                    break;
+                default:
+                    break;
+            };
+        });
+
+        res.status(200).json(classifiedTournaments);
+    } catch (err) {
+        console.error(`Error from the server: ${err.message}.`);
+        res.status(500).json({ message: "Internal Server Error" });
+        next(err);
+    }
+}

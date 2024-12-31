@@ -77,6 +77,10 @@ const TournamentSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    tournamentStatus: {
+        type: String,
+        default: "UPCOMING"
+    },
     contactNumber: {
         type: String,
         required: true,
