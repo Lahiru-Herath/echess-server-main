@@ -57,6 +57,10 @@ const TournamentSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    entryType: {
+        type: String,
+        default: "Paid",
+    },
     gameType: {
         type: String,
         required: true,
