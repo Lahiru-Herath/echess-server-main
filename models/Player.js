@@ -32,7 +32,7 @@ const PlayerSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    tournamentRegsitrations: {
+    tournamentRegistrations: {
         type: [TournamentRegistrationSchema],
         required: false,
     },
