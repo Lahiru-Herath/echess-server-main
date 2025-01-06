@@ -151,10 +151,13 @@ export const getTournamentByStatus = async (req, res, next) => {
 
 // TOURNAMENT REGISTRATION
 export const playerRegistration = async (req, res, next) => {
+    // console.log(req.body);
     const {
         userId,
         fideId,
-        name,
+        fideRating,
+        nameWithInitials,
+        sex,
         birthday,
         ageGroup,
         address,
@@ -175,7 +178,13 @@ export const playerRegistration = async (req, res, next) => {
         if (!player) {
             player = new Player({
                 userId,
+                nameWithInitials,
+                fideRating,
+                sex,
+                ageGroup,
+                address,
                 fideId,
+                country,
                 tournamentRegistrations: [],
             });
         };
@@ -199,7 +208,7 @@ export const playerRegistration = async (req, res, next) => {
         // ADD PLAYER REGISTRATION TO THE TOURNAMENT
         const playerRegistration = {
             playerId: player._id,
-            name,
+            name: nameWithInitials,
             birthDay: birthday,
             ageGroup,
             address,

@@ -28,9 +28,37 @@ const PlayerSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true,
     },
-    fideId: {
+    nameWithInitials: {
         type: String,
         required: true,
+    },
+    fideId: {
+        type: String,
+        required: false,
+    },
+    fideRating: {
+        type: Number,
+        required: false,
+    },
+    sex: {
+        type: String,
+        required: true,
+    },
+    ageGroup: {
+        type: String,
+        required: true,
+    },
+    birthday: {
+        type: String,
+        required: true,
+    },
+    address: {
+        type: String,
+        required: false,
+    },
+    country: {
+        type: String,
+        required: false,
     },
     tournamentRegistrations: {
         type: [TournamentRegistrationSchema],
