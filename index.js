@@ -9,6 +9,7 @@ import userRoutes from "./routes/userRoutes.js";
 import playerRoutes from "./routes/playerRoutes.js";
 import organizerRoutes from "./routes/organizerRoutes.js";
 import tournamentRoutes from "./routes/tournamentRoutes.js";
+import checkoutRoutes from "./routes/checkoutRoutes.js";
 
 const app = express();
 
@@ -34,6 +35,10 @@ app.use(cors({
 }));
 
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// ISOLATING WEBHOOK ROUTE FOR RAW BODY PARSING
+app.use('/api/v1/checkout/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 
 // ROUTES
@@ -42,6 +47,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/players", playerRoutes);
 app.use("/api/v1/organizers", organizerRoutes);
 app.use("/api/v1/tournaments", tournamentRoutes);
+app.use("/api/v1/checkout", checkoutRoutes);
 
 app.use((err, req, res, next) => {
     const errorStatus = err.status || 500;

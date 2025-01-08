@@ -66,6 +66,31 @@ export const getPlayerTournaments = async (req, res, next) => {
         return res.status(200).json(formattedTournaments);
     } catch (error) {
         console.error("Error fetchind tournaments for player: ", error);
+        next(error);
         return res.status(500).json({ error: "Internal server error" });
+    }
+}
+
+export const updatePaymentStatus = async (req, res, next) => {
+    const userId = req.body.userId;
+    const tournamentId = req.body.tournamentId;
+
+    try {
+        const player = await Player.findOne({ userId });
+        if (!player) return res.status(404).json({ error: "Player not found" });
+
+        const tournamentRegistration = player.tournamentRegistrations.find(
+            (reg) => reg.tournamentId.toString() === tournamentId
+        );
+
+        if (!tournamentRegistration) return res.status(404).json({ error: "Tournament registration was not found" });
+
+        tournamentRegistration.paymentStatus = "COMPLETED";
+        await player.save();
+
+        res.status(200).json({ message: "Payment status updated successfully" });
+    } catch (error) {
+        console.error("Error updating payment status: ", error.message);
+        res.status(500).json({ error: "Internal server error" });
     }
 }
