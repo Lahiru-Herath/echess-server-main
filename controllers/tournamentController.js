@@ -87,6 +87,7 @@ export const getClassifiedTournaments = async (req, res, next) => {
             const entryType = tournament.ageDetails?.length > 0 ? "Paid" : "Free";
             const numPlayers = tournament.playerRegistrations?.length;
             const tournamentData = {
+                id: tournament._id,
                 name: tournament.name,
                 club: organizer.clubName,
                 location: tournament.location,
@@ -125,11 +126,13 @@ export const getTournamentByStatus = async (req, res, next) => {
     const userId = req.query.userId;
     try {
         const player = await Player.findOne({ userId: userId });
-        if (!player) res.status(404).json({ message: "Player not found" });
+        let registeredTournamentIds = [];
 
-        const registeredTournamentIds = player.tournamentRegistrations.map(
-            (registration) => registration.tournamentId.toString()
-        );
+        if (player) {
+            registeredTournamentIds = player.tournamentRegistrations.map(
+                (registration) => registration.tournamentId.toString()
+            );
+        }
 
         const tournaments = await Tournament.find({ tournamentStatus: status }, "_id name entryType organizerId playerRegistrations").populate({
             path: "organizerId",
@@ -185,6 +188,7 @@ export const playerRegistration = async (req, res, next) => {
                 address,
                 fideId,
                 country,
+                birthday,
                 tournamentRegistrations: [],
             });
         };
@@ -231,3 +235,64 @@ export const playerRegistration = async (req, res, next) => {
         next(error);
     }
 }
+
+export const revokePlayerRegistration = async (req, res, next) => {
+    const playerId = req.query.playerId;
+    const tournamentId = req.query.tournamentId;
+
+    try {
+        const player = await Player.findById(playerId);
+        if (!player) return res.status(404).json({ message: "Player not found" });
+
+        const tournament = await Tournament.findById(tournamentId);
+        if (!tournament) return res.status(404).json({ message: "Tournament not found" });
+
+        // Remove the tournamentRegistration from the player
+        player.tournamentRegistrations = player.tournamentRegistrations.filter(
+            (registration) => registration.tournamentId.toString() !== tournamentId
+        );
+
+        // Remove the playerRegistration from the tournament
+        tournament.playerRegistrations = tournament.playerRegistrations.filter(
+            (registration) => registration.playerId.toString() !== playerId
+        );
+
+        // Save the updated player and tournament
+        await player.save();
+        await tournament.save();
+
+        res.status(200).json({ message: "Player registration revoked successfully" });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const acceptPlayerRegistration = async (req, res, next) => {
+    const playerId = req.query.playerId;
+    const tournamentId = req.query.tournamentId;
+    console.log(req.query);
+
+    console.log("PlayerId: ", playerId);
+    console.log("TournamentId: ", tournamentId);
+
+    try {
+        const player = await Player.findById(playerId);
+        if (!player) return res.status(404).json({ message: "Player not found" });
+
+        const tournament = await Tournament.findById(tournamentId);
+        if (!tournament) return res.status(404).json({ message: "Tournament not found" });
+
+        const tournamentRegistration = player.tournamentRegistrations.find(
+            (reg) => reg.tournamentId.toString() === tournamentId
+        );
+        if (!tournamentRegistration) return res.status(404).json({ message: "Tournament registration was not found" });
+
+        tournamentRegistration.paymentStatus = "COMPLETED";
+        await player.save();
+
+        res.status(200).json({ message: "Payment status updated successfully" });
+    } catch (error) {
+        console.error("Error updating payment status: ", error.message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
