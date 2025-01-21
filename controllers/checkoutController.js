@@ -2,22 +2,21 @@ import Stripe from "stripe";
 import Player from "../models/Player.js";
 
 const stripe = new Stripe(
-    "sk_test_51QeFTYJXGNMeaANxrrMxSRe8TtY9TUvWnly4iXpvI2IIrWWusoPW8yAzgBNs0tpPK2kzz8Ht4spqCRvP0m3vAaJg00q0zbYtiE"
+    "sk_test_51QeFTYJXGNMeaANx67NRB796HhYsuJA5FQ0TMTR1s6ZuioDYn6fnHKLNAX8O5ZBU9IDCYBGr3803r4p9zJCekNBm00lNCzGCVB"
 );
 
 export const stripeWebhook = async (req, res, next) => {
     const sig = req.headers["stripe-signature"];
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    // console.log("Raw Body: ", req.body);
-    // console.log("Signature: ", sig);
+    console.log("Webhook received");
 
     let event;
 
     try {
         // Ensure the raw body is passed as a Buffer
         event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-        // console.log("Event: ", event);
+        console.log("Event: ", event);
     } catch (err) {
         console.error("Webhook signature verification failed: ", err.message);
         return res.status(400).json({ message: `Webhook error: ${err.message}` });
@@ -26,15 +25,18 @@ export const stripeWebhook = async (req, res, next) => {
     if (event.type === "checkout.session.completed") {
         const session = event.data.object;
 
-        const { userId, tournamentId } = session.metadata;
+        const userId = session.metadata.userId;
+        const tournamentId = session.metadata.tournamentId;
 
         try {
+            console.log("Updating payment status for user: ", userId);
             const player = await Player.findOne({ userId });
             if (!player) return res.status(404).json({ message: "Player not found" });
 
             const tournamentRegistration = player.tournamentRegistrations.find(
                 (reg) => reg.tournamentId.toString() === tournamentId
             );
+            console.log("Tournament Registration: ", tournamentRegistration);
 
             if (!tournamentRegistration) return res.status(404).json({ message: "Tournament not found" });
 

@@ -1,6 +1,7 @@
 import Player from "../models/Player.js";
 import Tournament from "../models/Tournament.js";
 import User from "../models/User.js"
+import { createError } from "../utils/error.js";
 
 export const createPlayer = async (req, res, next) => {
     try {
@@ -39,7 +40,7 @@ export const getPlayerByUser = async (req, res, next) => {
 export const getPlayerTournaments = async (req, res, next) => {
     try {
         const player = await Player.findOne({ userId: req.params.id });
-        if (!player) res.status(404).json({ message: "Player not found!" });
+        if (!player) return res.status(404).json({ message: "Player not found!" });
 
         const tournamentIds = player.tournamentRegistrations.map(
             (registration) => registration.tournamentId
@@ -94,3 +95,82 @@ export const updatePaymentStatus = async (req, res, next) => {
         res.status(500).json({ error: "Internal server error" });
     }
 }
+
+export const getPlayersByTournamentAndPaymentStatus = async (req, res, next) => {
+    const tournamentId = req.query.tournamentId;
+    // console.log(tournamentId);
+
+    try {
+        const tournament = await Tournament.findById(tournamentId).populate({
+            path: "playerRegistrations.playerId",
+            select: "nameWithInitials fideId fideRating sex ageGroup birthday address country tournamentRegistrations",
+        });
+
+        if (!tournament) return next(createError(404, "Tournament not found"));
+
+        const playersByPaymentStatus = {
+            PENDING: [],
+            COMPLETED: [],
+        };
+
+        tournament.playerRegistrations.forEach((registration) => {
+            const player = registration.playerId;
+            const playerRegistration = player.tournamentRegistrations.find(
+                (reg) => reg.tournamentId.toString() === tournamentId
+            );
+
+            if (playerRegistration) {
+                const playerData = {
+                    playerId: player._id,
+                    nameWithInitials: player.nameWithInitials,
+                    fideId: player.fideId,
+                    fideRating: player.fideRating,
+                    sex: player.sex,
+                    ageGroup: player.ageGroup,
+                    birthday: player.birthday,
+                    address: player.address,
+                    country: player.country,
+                    paymentStatus: playerRegistration.paymentStatus,
+                };
+
+                if (playerRegistration.paymentStatus === "PENDING") {
+                    playersByPaymentStatus.PENDING.push(playerData);
+                } else if (playerRegistration.paymentStatus === "COMPLETED") {
+                    playersByPaymentStatus.COMPLETED.push(playerData);
+                }
+            }
+        });
+
+        res.status(200).json(playersByPaymentStatus);
+    } catch (error) {
+        console.log("Error fetching players by payment status: ", error);
+        next(error);
+    }
+}
+
+export const getPlayerTournamentRegistrations = async (req, res, next) => {
+    const userId = req.query.userId;
+
+    try {
+        const player = await Player.findOne({ userId: userId }).populate({
+            path: 'tournamentRegistrations.tournamentId',
+            select: 'name'
+        });
+        if (!player) {
+            return res.status(404).json({ message: "Player not found" });
+        }
+
+        const tournamentRegistrations = player.tournamentRegistrations.map(registration => ({
+            name: registration.tournamentId.name, // Access the tournament name
+            paymentStatus: registration.paymentStatus,
+            fee: registration.paymentAmount
+        }));
+        console.log(tournamentRegistrations);
+
+        res.status(200).json(tournamentRegistrations);
+    } catch (error) {
+        console.error('Error fetching tournament registrations:', error);
+        res.status(500).json({ message: 'Internal server error' });
+        next(error);
+    }
+};

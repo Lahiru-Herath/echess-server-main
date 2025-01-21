@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 
+dotenv.config();
+
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import playerRoutes from "./routes/playerRoutes.js";
@@ -12,8 +14,6 @@ import tournamentRoutes from "./routes/tournamentRoutes.js";
 import checkoutRoutes from "./routes/checkoutRoutes.js";
 
 const app = express();
-
-dotenv.config();
 
 const port = process.env.PORT;
 

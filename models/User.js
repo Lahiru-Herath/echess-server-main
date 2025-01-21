@@ -20,7 +20,13 @@ const UserSchema = new mongoose.Schema({
     role: {
         type: String,
         default: "PLAYER",
-    }
+    },
+    resetPasswordToken: {
+        type: String,
+    },
+    resetPasswordExpires: {
+        type: Date,
+    },
 },
     { timestamps: true }
 );

@@ -1,11 +1,13 @@
 import express from 'express';
-import { createTournament, getClassifiedTournaments, getTournament, getTournamentByStatus, getTournaments, playerRegistration } from '../controllers/tournamentController.js';
+import { acceptPlayerRegistration, createTournament, getClassifiedTournaments, getTournament, getTournamentByStatus, getTournaments, playerRegistration, revokePlayerRegistration } from '../controllers/tournamentController.js';
 
 const router = express.Router();
 
 // STATIC ROUTES
 router.get("/classified-tournaments", getClassifiedTournaments);
 router.get("/tournament-by-status", getTournamentByStatus);
+router.delete("/remove-player-registration", revokePlayerRegistration);
+router.put("/accept-player-registration", acceptPlayerRegistration);
 
 // DYNAMIC ROUTES
 router.get("/:id", getTournament);

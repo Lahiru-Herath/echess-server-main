@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 const TournamentRegistrationSchema = new mongoose.Schema({
     tournamentId: {
         type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tournament',
         required: true,
     },
     registeredDate: {
@@ -26,6 +27,7 @@ const TournamentRegistrationSchema = new mongoose.Schema({
 const PlayerSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
         required: true,
     },
     nameWithInitials: {
