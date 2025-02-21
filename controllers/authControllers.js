@@ -32,7 +32,7 @@ export const login = async (req, res, next) => {
 
         const isPasswordCorrect = await comparePasswords(req.body.password, user.password);
 
-        if (!isPasswordCorrect) return next(createError(400, "Incorrect email of password!"));
+        if (!isPasswordCorrect) return next(createError(400, "Incorrect email or password!"));
 
         const token = jwt.sign({ id: user._id, role: user.role, }, process.env.JWT)
 
