@@ -43,6 +43,25 @@ const playerRegistrationSchema = new mongoose.Schema({
     }
 });
 
+const newsSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true,
+    },
+    description: {
+        type: String,
+        required: true,
+    },
+    image: {
+        type: String,
+        required: true,
+    },
+    createdDate: {
+        type: Date,
+        default: Date.now,
+    }
+});
+
 const TournamentSchema = new mongoose.Schema({
     organizerId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -89,12 +108,24 @@ const TournamentSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    logoImage: {
+        type: String,
+        required: false,
+    },
+    coverImage: {
+        type: String,
+        required: false,
+    },
     ageDetails: {
         type: [ageDetailsSchema],
         required: false,
     },
     playerRegistrations: {
         type: [playerRegistrationSchema],
+        required: false,
+    },
+    news: {
+        type: [newsSchema],
         required: false,
     }
 },

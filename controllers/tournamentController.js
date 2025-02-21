@@ -296,3 +296,97 @@ export const acceptPlayerRegistration = async (req, res, next) => {
         res.status(500).json({ error: "Internal server error" });
     }
 };
+
+export const createNews = async (req, res, next) => {
+    const { tournamentId, title, description, image } = req.body;
+    try {
+        const tournament = await Tournament.findById(tournamentId);
+        if (!tournament) return next(createError(404, "Tournament not found"));
+
+        const newNews = {
+            title,
+            description,
+            image: image || 'default-news-image.jpg',
+            createdDate: new Date(),
+        };
+
+        tournament.news.push(newNews);
+        await tournament.save();
+
+        res.status(201).json({ message: "News created sucessfully", news: newNews });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const updateNews = async (req, res, next) => {
+    const { tournamentId, newsId, title, description, image } = req.body;
+
+    try {
+        const tournament = await Tournament.findById(tournamentId);
+        if (!tournament) return next(createError(404, "Tournament not found"));
+
+        const newsItem = tournament.news.id(newsId);
+        if (!newsItem) return next(createError(404, "News not found"));
+
+        newsItem.title = title || newsItem.title;
+        newsItem.description = description || newsItem.description;
+        newsItem.image = image || newsItem.image;
+        await tournament.save();
+
+        res.status(200).json({ message: "News updated successfully", news: newsItem });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const deleteNews = async (req, res, next) => {
+    const { tournamentId, newsId } = req.body;
+
+    try {
+        const tournament = await Tournament.findById(tournamentId);
+        if (!tournament) return next(createError(404, "Tournament not found"));
+
+        const newsItem = tournament.news.id(newsId);
+        if (!newsItem) return next(createError(404, "Tournament not found"));
+
+        newsItem.remove();
+        await tournament.save();
+
+        res.status(200).json({ message: "News deleted successfully" });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getCategorizedPlayers = async (req, res, next) => {
+    const { tournamentId } = req.params;
+
+    try {
+        const tournament = await Tournament.findById(tournamentId);
+        if (!tournament) return next(createError(404, "Tournament not found"));
+
+        const players = tournament.playerRegistrations.map(registration => registration.playerId);
+
+        const groupedPlayers = players.reduce((acc, player) => {
+            const ageGroup = player.ageGroup;
+            const gender = player.sex;
+
+            if (!acc[ageGroup]) {
+                acc[ageGroup] = { male: [], female: [] };
+            }
+
+            if (gender === "Male") {
+                acc[ageGroup].male.push(player);
+            } else if (gender === "Female") {
+                acc[ageGroup].female.push(player);
+            }
+
+            return acc;
+        }, {});
+
+        res.status(200).json(groupedPlayers);
+    } catch (err) {
+        next(err);
+    }
+}
