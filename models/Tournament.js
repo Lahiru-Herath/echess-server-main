@@ -88,6 +88,15 @@ const TournamentSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
+    onGoingRound: {
+        type: Number,
+        required: false,
+        default: 0,
+    },
+    nextRoundStartingDateTime: {
+        type: Date,
+        required: false,
+    },
     location: {
         type: String,
         required: true,
