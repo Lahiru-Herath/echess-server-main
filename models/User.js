@@ -22,6 +22,9 @@ const UserSchema = new mongoose.Schema({
         enum: ["PLAYER", "ORGANIZER"],
         default: "PLAYER",
     },
+    profilePicture: {
+        type: String,
+    },
     resetPasswordToken: {
         type: String,
     },
