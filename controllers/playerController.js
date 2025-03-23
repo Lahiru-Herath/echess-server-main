@@ -28,6 +28,15 @@ export const createPlayer = async (req, res, next) => {
     }
 }
 
+export const updatePlayer = async (req, res, next) => {
+    try {
+        const player = await Player.findOneAndUpdate({ userId: req.params.id }, req.body, { new: true });
+        res.status(201).json({ message: "Player updated successfully", data: player });
+    } catch (err) {
+        next(err);
+    }
+}
+
 export const getPlayerByUser = async (req, res, next) => {
     try {
         const response = await Player.findOne({ userId: req.params.id });

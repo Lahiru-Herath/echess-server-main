@@ -38,6 +38,15 @@ export const getOrganizer = async (req, res, next) => {
     }
 }
 
+export const updateOrganizer = async (req, res, next) => {
+    try {
+        const organizer = await Organizer.findOneAndUpdate({ userId: req.params.id }, req.body, { new: true });
+        res.status(200).json({ message: "Organizer updated succesfully", data: organizer });
+    } catch (err) {
+        next(err);
+    }
+}
+
 export const getOrganizerByUser = async (req, res, next) => {
     try {
         const response = await Organizer.findOne({ userId: req.params.id });
