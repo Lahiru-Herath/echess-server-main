@@ -122,33 +122,81 @@ export const getClassifiedTournaments = async (req, res, next) => {
 }
 
 export const getTournamentByStatus = async (req, res, next) => {
-    const status = req.query.status;
-    const userId = req.query.userId;
-    try {
-        const player = await Player.findOne({ userId: userId });
-        let registeredTournamentIds = [];
+    const { status, userId } = req.query;
 
-        if (player) {
-            registeredTournamentIds = player.tournamentRegistrations.map(
-                (registration) => registration.tournamentId.toString()
-            );
+    try {
+        let player = await Player.findOne({ userId });
+        let tournaments = [];
+
+        switch (status) {
+            case "UPCOMING":
+                tournaments = await Tournament.find(
+                    { tournamentStatus: "UPCOMING" },
+                    "_id name entryType organizerId playerRegistrations"
+                ).populate({
+                    path: "organizerId",
+                    select: "clubName",
+                });
+                break;
+
+            case "ONGOING":
+            case "COMPLETED":
+                if (!player) {
+                    return res.status(200).json([]);
+                }
+                const registeredTournamentIds = player.tournamentRegistrations.map(
+                    reg => reg.tournamentId
+                );
+                tournaments = await Tournament.find(
+                    {
+                        _id: { $in: registeredTournamentIds },
+                        tournamentStatus: status
+                    },
+                    "_id name entryType organizerId playerRegistrations"
+                ).populate({
+                    path: "organizerId",
+                    select: "clubName",
+                });
+                break;
+
+            case "REGISTERED":
+                if (!player) {
+                    return res.status(200).json([]);
+                }
+                const allRegisteredTournamentIds = player.tournamentRegistrations.map(
+                    reg => reg.tournamentId
+                );
+                tournaments = await Tournament.find(
+                    {
+                        _id: { $in: allRegisteredTournamentIds }
+                    },
+                    "_id name entryType organizerId playerRegistrations tournamentStatus"
+                ).populate({
+                    path: "organizerId",
+                    select: "clubName",
+                });
+                break;
+
+            default:
+                return res.status(400).json({ message: "Invalid Status" });
         }
 
-        const tournaments = await Tournament.find({ tournamentStatus: status }, "_id name entryType organizerId playerRegistrations").populate({
-            path: "organizerId",
-            select: "clubName",
-        });
+        const registeredTournamentIds = player?.tournamentRegistrations?.map(
+            reg => reg.tournamentId.toString()
+        ) || [];
 
-        const formattedTournaments = tournaments.map((tournament) => ({
+        const formattedTournaments = tournaments.map(tournament => ({
             _id: tournament._id,
             name: tournament.name,
             entryType: tournament.entryType,
             organizerName: tournament.organizerId?.clubName || "Unknown Organizer",
             isPlayerRegistered: registeredTournamentIds.includes(tournament._id.toString()),
+            tournamentStatus: tournament.tournamentStatus,
         }));
-        res.status(201).json(formattedTournaments);
-    } catch (error) {
-        next(error);
+
+        res.status(200).json(formattedTournaments);
+    } catch (err) {
+        next(err);
     }
 }
 

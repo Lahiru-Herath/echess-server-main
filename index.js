@@ -13,6 +13,7 @@ import organizerRoutes from "./routes/organizerRoutes.js";
 import tournamentRoutes from "./routes/tournamentRoutes.js";
 import checkoutRoutes from "./routes/checkoutRoutes.js";
 import imageRoutes from "./routes/imageRoutes.js";
+import { updateTournamentStatuses } from './utils/scheduler.js';
 
 const app = express();
 
@@ -50,6 +51,9 @@ app.use("/api/v1/organizers", organizerRoutes);
 app.use("/api/v1/tournaments", tournamentRoutes);
 app.use("/api/v1/checkout", checkoutRoutes);
 app.use("/api/v1/images", imageRoutes);
+
+// Schedulers
+updateTournamentStatuses();
 
 app.use((err, req, res, next) => {
     const errorStatus = err.status || 500;
