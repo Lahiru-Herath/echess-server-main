@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import cors from 'cors';
+import http from 'http'; // Import HTTP to wrap Express
+import { initializeSocket } from './socket.js'; // Import the Socket.IO logic
 
 dotenv.config();
 
@@ -16,10 +18,11 @@ import imageRoutes from "./routes/imageRoutes.js";
 import { updateTournamentStatuses } from './utils/scheduler.js';
 
 const app = express();
+const server = http.createServer(app); // Wrap Express app with HTTP server
 
 const port = process.env.PORT;
 
-
+// MongoDB connection
 const connect = async () => {
     try {
         await mongoose.connect(process.env.MONGO);
@@ -30,20 +33,17 @@ const connect = async () => {
     }
 };
 
+// Middleware
 app.use(cors({
     origin: process.env.CLIENT_ORIGIN,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
 }));
-
 app.use(bodyParser.urlencoded({ extended: true }));
-
-// ISOLATING WEBHOOK ROUTE FOR RAW BODY PARSING
 app.use('/api/v1/checkout/webhook', express.raw({ type: 'application/json' }));
-
 app.use(express.json());
 
-// ROUTES
+// Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/players", playerRoutes);
@@ -55,6 +55,7 @@ app.use("/api/v1/images", imageRoutes);
 // Schedulers
 updateTournamentStatuses();
 
+// Error handling middleware
 app.use((err, req, res, next) => {
     const errorStatus = err.status || 500;
     const errorMessage = err.message || "Something went wrong!";
@@ -66,7 +67,11 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.listen(port, () => {
+// Initialize Socket.IO
+initializeSocket(server);
+
+// Start the server
+server.listen(port, () => {
     connect();
     console.log(`Server initialized on port ${port}`);
 });
